@@ -1,16 +1,27 @@
 import express from "express";
-import fileRouter from "./api/files.js";
-import folderRouter from ".api/folder.js";
-
 const app = express();
 export default app;
 
-// Body parsing middleware for JSON requests
+import foldersRouter from "./api/folders";
+import filesRouter from "./api/files";
+
 app.use(express.json());
 
-app.get("/", (req, res) => {
-  res.send("File and Folder application");
+app.use("/files", filesRouter);
+app.use("/folders", foldersRouter);
+
+// PostgreSQL errors have codes that we can check to send better
+// error messages to the client.
+app.use((err, req, res, next) => {
+  // Unique constraint violation
+  if (err.code === "23505") {
+    return res.status(400).send(err.detail);
+  }
+
+  next(err);
 });
 
-app.use("/files", fileRouter);
-app.use("/folders", folderRouter);
+app.use((err, req, res, next) => {
+  console.error(err);
+  res.status(500).send("Sorry! Something went wrong.");
+});
