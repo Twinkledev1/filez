@@ -18,7 +18,7 @@ export async function createFiles({ name, size, folder_id }) {
 
 export async function getFiles() {
   try {
-    const sql = `select * from files; `;
+    const sql = `select id,name, size, (select name from folders where id = folder_id) as folder_name from files f; `;
     const res = await db.query(sql);
     return res.rows;
   } catch (error) {

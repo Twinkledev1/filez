@@ -26,3 +26,28 @@ export async function getFolders() {
     throw error;
   }
 }
+
+
+export async function getFolderByIdIncludingFiles(id) {
+    try {
+      const sql = `SELECT 
+      f.id,
+      f.name,
+      COALESCE(json_agg(
+          json_build_object(
+              'id', fi.id,
+              'name', fi.name,
+              'size', fi.size
+          )
+      ) FILTER (WHERE fi.id IS NOT NULL), '[]') AS files
+  FROM folders f
+  LEFT JOIN files fi ON f.id = fi.folder_id
+  WHERE f.id = $1
+  GROUP BY f.id, f.name; `;
+      const res = await db.query(sql, [id]);
+      return res.rows[0];
+    } catch (error) {
+      console.error("Error getting folder by id", error);
+      throw error;
+    }
+  }
